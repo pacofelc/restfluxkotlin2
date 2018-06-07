@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.publisher.toMono
 
 @RestController
 class StudentController (
@@ -28,19 +29,34 @@ class StudentController (
     @GetMapping("/student/name")
     fun studentByName(@RequestParam name:String) = repository.findByName(name)
 
+    @GetMapping("/student/id")
+    fun studentById(@RequestParam id:String) = repository.findById(id)
+
 
     @GetMapping("/student/new")
-    fun students(@RequestParam id:String, @RequestParam name:String): Mono<Student> {
-
-        println ( "----- id $id y name $name")
+    fun nuevo(@RequestParam id:String, @RequestParam name:String): Mono<Student> {
 
         val student = Student(id, name)
-
-        println ("----- Creado ${student.id} ${student.name}")
-
         return repository.save( student )
     }
 
+    @GetMapping("/student/update")
+    fun modificar(@RequestParam id:String, @RequestParam name:String): Mono <Student> {
+
+        repository.findById(id).doOnSuccess {student->
+
+            println ("----------Encontrado $student")
+            val modified = student.copy(name=name)
+            println ("----------Cambiado $modified")
+            repository.save( modified ).subscribe( )
+
+            // TODO NO SE COMO DEVOLVER MODIFIED==
+            // TODO NO SE PORQUE HAY QUE HACER DOS SUBSCRIBE??
+            //return@doOnSuccess modified
+        }.subscribe( )
+
+        return Student ("0", "desconocido").toMono()
+    }
 
 
 }
